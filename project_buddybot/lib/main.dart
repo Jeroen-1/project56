@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:rive/rive.dart';
 import 'package:flutter/services.dart';
 
@@ -13,26 +14,21 @@ class BuddyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Project56',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const EyesAnimation(),
-
+      home: AppMainPage(),
     );
   }
 }
 
-class EyesAnimation extends StatefulWidget {
-  const EyesAnimation({Key? key}) : super(key: key);
+class AppMainPage extends StatefulWidget {
+  const AppMainPage({Key? key}) : super(key: key);
 
   @override
-  _EyesAnimationState createState() => _EyesAnimationState();
+  _AppMainPageState createState() => _AppMainPageState();
 }
 
-class _EyesAnimationState extends State<EyesAnimation> {
+class _AppMainPageState extends State<AppMainPage> {
   /// Controller for playback
   late RiveAnimationController _controller;
 
@@ -51,24 +47,71 @@ class _EyesAnimationState extends State<EyesAnimation> {
     super.dispose();
   }
 
-  // https://help.rive.app/runtimes/state-machines
-
+  /// Limited scalable main page with the camera preview and the eyes
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: GestureDetector(
-          onTap: _togglePlay,
-          child: RiveAnimation.asset(
-            'assets/eyes3.riv',
-            artboard: 'New Artboard',
-            animations: const ['LookingAround'],
-            controllers: [_controller],
-            fit: BoxFit.cover,
+      body: Row(
+        children: <Widget>[
+          Container(
+            height: 300,
+            width: 300,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Row(
+              children: <Widget>[
+                Column(
+                  children: <Widget>[
+                    const Text('Camera preview:',
+                        style: TextStyle(fontSize: 20.0, color: Colors.white)),
+                    const SizedBox(height: 15),
+                    Image.asset('assets/image.png', scale: 2.5, fit: BoxFit.cover),
+                  ],
+                )
+              ],
+            ),
           ),
-        ),
+          Container(
+            height: 500,
+            width: 500,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            // padding: const EdgeInsets.only(bottom: 15.0, left: 5.0),
+            child: GestureDetector(
+              onTap: _togglePlay,
+              child: RiveAnimation.asset(
+                'assets/eyes3.riv',
+                artboard: 'New Artboard',
+                animations: const ['LookingAround'],
+                controllers: [_controller],
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ]
       ),
       backgroundColor: Colors.grey,
     );
   }
+
+  /// Fully scalable main page with just the eyes
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: Center(
+//         child: GestureDetector(
+//           onTap: _togglePlay,
+//           child: RiveAnimation.asset(
+//             'assets/eyes3.riv',
+//             artboard: 'New Artboard',
+//             animations: const ['LookingAround'],
+//             controllers: [_controller],
+//             fit: BoxFit.cover,
+//           ),
+//         ),
+//       ),
+//       backgroundColor: Colors.grey,
+//     );
+//   }
 }
+
+/// Helpful links:
+// https://help.rive.app/runtimes/state-machines
