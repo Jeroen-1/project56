@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -40,10 +41,33 @@ class _CameraViewState extends State<CameraView> {
   int _cameraIndex = 0;
   double zoomLevel = 0.0, minZoomLevel = 0.0, maxZoomLevel = 0.0;
 
+  get gameStageBloc => null;
+  bool get isPlaying => _controller1?.isActive ?? false;
+  Artboard? _riveArtboard;
+  late RiveAnimationController _controller1;
+
+  String lastPlayedAnimation = "nothing";
+
+
   @override
   void initState() {
     super.initState();
+    rootBundle.load('assets/selfmade_eye.riv').then(
+          (data) async {
+        // Load the RiveFile from the binary data.
+        final file = RiveFile.import(data);
 
+        // The artboard is the root of the animation and gets drawn in the
+        // Rive widget.
+        final artboard = file.mainArtboard;
+        setState(() => _riveArtboard = file.mainArtboard
+          ..addController(
+              SimpleAnimation('Mid-mid')
+          ));
+
+        setState(() => _riveArtboard = artboard);
+      },
+    );
     _imagePicker = ImagePicker();
     for (var i = 0; i < cameras.length; i++) {
       if (cameras[i].lensDirection == widget.initialDirection) {
@@ -151,15 +175,9 @@ class _CameraViewState extends State<CameraView> {
                   )
               ),
               Container(
+                width: 800,
                 height: 400,
-                width: 400,
-                // padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                child: RiveAnimation.asset(
-                  'assets/eyes3.riv',
-                  artboard: 'New Artboard',
-                  animations: const ['LookingAround'],
-                  fit: BoxFit.cover,
-                ),
+                child: faceFollower(),
               ),
               Container(
                   child: Center(
@@ -176,6 +194,10 @@ class _CameraViewState extends State<CameraView> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
                           child: Text(xWord + ' ' + yWord, style: TextStyle(fontSize: 15.0, color: Colors.black)),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                          child: Text(lastPlayedAnimation, style: TextStyle(fontSize: 15.0, color: Colors.black)),
                         ),
                       ],
                     ),
@@ -287,6 +309,62 @@ class _CameraViewState extends State<CameraView> {
     });
     final inputImage = InputImage.fromFilePath(pickedFile.path);
     widget.onImage(inputImage);
+  }
+
+  Widget faceFollower() {
+    if (_riveArtboard != null) {
+      print(xWord);
+      print(yWord);
+
+      if(xWord == "Links"){
+        if(yWord == "Boven" && lastPlayedAnimation != "Top-left"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Top-left'));
+          lastPlayedAnimation = "Top-left";
+        }
+        if(yWord == "Midden" && lastPlayedAnimation != "Mid-left"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Mid-left'));
+          lastPlayedAnimation = "Mid-left";
+        }
+        if(yWord == "Onder" && lastPlayedAnimation != "Bottom-left"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Bottom-left'));
+          lastPlayedAnimation = "Bottom-left";
+        }
+      }
+      if(xWord == "Midden" && lastPlayedAnimation != "Top-mid"){
+        if(yWord == "Boven"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Top-mid'));
+          lastPlayedAnimation = "Top-mid";
+        }
+        if(yWord == "Midden" && lastPlayedAnimation != "Mid-mid"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Mid-mid'));
+          lastPlayedAnimation = "Mid-Mid";
+        }
+        if(yWord == "Onder" && lastPlayedAnimation != "Bottom-mid"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Bottom-mid'));
+          lastPlayedAnimation = "Bottom-mid";
+        }
+      }
+      if(xWord == "Rechts" && lastPlayedAnimation != "Top-right"){
+        if(yWord == "Boven"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Top-right'));
+          lastPlayedAnimation = "Top-right";
+        }
+        if(yWord == "Midden" && lastPlayedAnimation != "Mid-right"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Mid-right'));
+          lastPlayedAnimation = "Mid-right";
+        }
+        if(yWord == "Onder" && lastPlayedAnimation != "Bottom-right"){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Bottom-right'));
+          lastPlayedAnimation = "Bottom-right";
+        }
+      }
+      return Rive(
+        artboard: _riveArtboard!,
+        fit: BoxFit.cover,
+      );
+    } else {
+      return Container();
+    }
   }
 
   Future _processCameraImage(CameraImage image) async {
