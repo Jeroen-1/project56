@@ -86,24 +86,24 @@ class _CameraViewState extends State<CameraView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 20.0),
-            child: GestureDetector(
-              onTap: _switchScreenMode,
-              child: Icon(
-                _mode == ScreenMode.liveFeed
-                    ? Icons.photo_library_outlined
-                    : (Platform.isIOS
-                    ? Icons.camera_alt_outlined
-                    : Icons.camera),
-              ),
-            ),
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   title: Text(widget.title),
+      //   actions: [
+      //     Padding(
+      //       padding: EdgeInsets.only(right: 20.0),
+      //       child: GestureDetector(
+      //         onTap: _switchScreenMode,
+      //         child: Icon(
+      //           _mode == ScreenMode.liveFeed
+      //               ? Icons.photo_library_outlined
+      //               : (Platform.isIOS
+      //               ? Icons.camera_alt_outlined
+      //               : Icons.camera),
+      //         ),
+      //       ),
+      //     ),
+      //   ],
+      // ),
       body: _body(),
       floatingActionButton: _floatingActionButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -175,8 +175,8 @@ class _CameraViewState extends State<CameraView> {
                   )
               ),
               Container(
-                width: 750,
-                height: 375,
+                width: 854,
+                height: 432,
                 child: faceFollower(),
               ),
               Container(

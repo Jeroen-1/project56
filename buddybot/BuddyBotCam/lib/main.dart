@@ -47,9 +47,15 @@ class Home extends StatelessWidget {
         child: Center(
           child: Row(
             children: [
-              Container(
-                
-              ),
+              // Container (
+              //   height: 400,
+              //   width: 800,
+              //   child: Wrap(
+              //     children: <Widget> [
+              //       FaceDetectorView(),
+              //     ],
+              //   )
+              // ),
               Container(
                 height: 300,
                 width: 300,
@@ -100,9 +106,9 @@ class CustomCard extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text(
                     'This feature has not been implemented for iOS yet')));
-          } else
-            // MaterialPageRoute(builder: (context) => _viewPage);
+          } else {
             Navigator.push(context, MaterialPageRoute(builder: (context) => _viewPage));
+          }
         },
       ),
     );
