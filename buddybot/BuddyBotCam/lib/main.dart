@@ -48,6 +48,9 @@ class Home extends StatelessWidget {
           child: Row(
             children: [
               Container(
+                
+              ),
+              Container(
                 height: 300,
                 width: 300,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),

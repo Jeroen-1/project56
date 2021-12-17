@@ -175,33 +175,39 @@ class _CameraViewState extends State<CameraView> {
                   )
               ),
               Container(
-                width: 800,
-                height: 400,
+                width: 750,
+                height: 375,
                 child: faceFollower(),
               ),
               Container(
-                  child: Center(
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                          child: Text('X value: ' + x.toString(), style: TextStyle(fontSize: 15.0, color: Colors.black)),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                          child: Text('Y value: ' + y.toString(), style: TextStyle(fontSize: 15.0, color: Colors.black)),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                          child: Text(xWord + ' ' + yWord, style: TextStyle(fontSize: 15.0, color: Colors.black)),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                          child: Text(lastPlayedAnimation, style: TextStyle(fontSize: 15.0, color: Colors.black)),
-                        ),
-                      ],
-                    ),
-                  )
+                child: Center(
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                        child: Text('X value: ' + x.toString(), style: TextStyle(fontSize: 15.0, color: Colors.black)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                        child: Text('Y value: ' + y.toString(), style: TextStyle(fontSize: 15.0, color: Colors.black)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                        child: Text(xWord + ' ' + yWord, style: TextStyle(fontSize: 15.0, color: Colors.black)),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                        child: Text(lastPlayedAnimation, style: TextStyle(fontSize: 15.0, color: Colors.black)),
+                      ),
+                      OutlinedButton(
+                        onPressed: () {
+                          debugPrint('Received click: Start Event');
+                        },
+                        child: const Text('Start Event'),
+                      ),
+                    ],
+                  ),
+                )
               )
             ],
           ),
