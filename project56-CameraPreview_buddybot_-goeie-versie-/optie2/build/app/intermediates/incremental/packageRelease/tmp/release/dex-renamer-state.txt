@@ -1,0 +1,4 @@
+#Fri Dec 17 09:52:01 CET 2021
+base.0=/Users/jeroentuithof/Documents/GitHub/project56/optie2/build/app/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
