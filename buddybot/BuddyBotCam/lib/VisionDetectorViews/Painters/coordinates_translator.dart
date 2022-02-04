@@ -8,7 +8,7 @@ double translateX(
   switch (rotation) {
   //  quick hack to make sure (only) landscape mode works
     case InputImageRotation.Rotation_0deg:
-      return /* size.width - */ x * size.width / absoluteImageSize.width;
+      return  size.width - x * size.width / absoluteImageSize.width;
     case InputImageRotation.Rotation_90deg:
       return x *
           size.width /

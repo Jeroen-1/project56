@@ -1,16 +1,16 @@
 import 'dart:io';
-
+import 'package:buddy_bot_cam/ML/ML.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'face_detector_view.dart';
+import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/painting.dart';
 import 'package:rive/rive.dart';
-
 import '../main.dart';
 
 enum ScreenMode { liveFeed, gallery }
@@ -23,11 +23,11 @@ class CameraView extends StatefulWidget {
         required this.onImage,
         this.initialDirection = CameraLensDirection.back})
       : super(key: key);
-
   final String title;
   final CustomPaint? customPaint;
   final Function(InputImage inputImage) onImage;
   final CameraLensDirection initialDirection;
+  FaceDetector faceDetector = GoogleMlKit.vision.faceDetector();
 
   @override
   _CameraViewState createState() => _CameraViewState();
@@ -36,40 +36,30 @@ class CameraView extends StatefulWidget {
 class _CameraViewState extends State<CameraView> {
   ScreenMode _mode = ScreenMode.liveFeed;
   CameraController? _controller;
-  File? _image;
-  ImagePicker? _imagePicker;
   int _cameraIndex = 0;
-  double zoomLevel = 0.0, minZoomLevel = 0.0, maxZoomLevel = 0.0;
-
-  get gameStageBloc => null;
-  bool get isPlaying => _controller1?.isActive ?? false;
+  bool get isPlaying => _controller1.isActive;
   Artboard? _riveArtboard;
   late RiveAnimationController _controller1;
-
   String lastPlayedAnimation = "nothing";
-
 
   @override
   void initState() {
-    super.initState();
+    super.initState(); //loads the rive file from assets folder
     rootBundle.load('assets/selfmade_eye.riv').then(
           (data) async {
         // Load the RiveFile from the binary data.
         final file = RiveFile.import(data);
-
         // The artboard is the root of the animation and gets drawn in the
-        // Rive widget.
         final artboard = file.mainArtboard;
-        setState(() => _riveArtboard = file.mainArtboard
+        setState(() => _riveArtboard = file.mainArtboard // set the first state of the animation to be Mid-mid
           ..addController(
               SimpleAnimation('Mid-mid')
           ));
-
         setState(() => _riveArtboard = artboard);
       },
     );
-    _imagePicker = ImagePicker();
-    for (var i = 0; i < cameras.length; i++) {
+    // Camera view for testing how the eyes follows you
+    for (var i = 0; i < cameras.length; i++) { 
       if (cameras[i].lensDirection == widget.initialDirection) {
         _cameraIndex = i;
       }
@@ -86,53 +76,13 @@ class _CameraViewState extends State<CameraView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(widget.title),
-      //   actions: [
-      //     Padding(
-      //       padding: EdgeInsets.only(right: 20.0),
-      //       child: GestureDetector(
-      //         onTap: _switchScreenMode,
-      //         child: Icon(
-      //           _mode == ScreenMode.liveFeed
-      //               ? Icons.photo_library_outlined
-      //               : (Platform.isIOS
-      //               ? Icons.camera_alt_outlined
-      //               : Icons.camera),
-      //         ),
-      //       ),
-      //     ),
-      //   ],
-      // ),
       body: _body(),
-      floatingActionButton: _floatingActionButton(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  Widget? _floatingActionButton() {
-    if (_mode == ScreenMode.gallery) return null;
-    if (cameras.length == 1) return null;
-    return Container(
-        height: 70.0,
-        width: 70.0,
-        child: FloatingActionButton(
-          child: Icon(
-            Platform.isIOS
-                ? Icons.flip_camera_ios_outlined
-                : Icons.flip_camera_android_outlined,
-            size: 40,
-          ),
-          onPressed: _switchLiveCamera,
-        ));
-  }
-
   Widget _body() {
     Widget body;
-    if (_mode == ScreenMode.liveFeed)
       body = _liveFeedBody();
-    else
-      body = _galleryBody();
     return body;
   }
 
@@ -140,45 +90,31 @@ class _CameraViewState extends State<CameraView> {
     if (_controller?.value.isInitialized == false) {
       return Container();
     }
+    //checks the width and height from every device (may need improvement)!
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
     return Container(
-      // color: Colors.black,
         child: Center(
           child: Column(
             children: [
+              //change width and height for the camera preview size
               Container(
                   width: 0,
                   height: 0,
                   child: Row(
                     children: <Widget>[
                       CameraPreview(_controller!),
-                      if (widget.customPaint != null) widget.customPaint!,
-                      Positioned(
-                        bottom: 100,
-                        left: 50,
-                        right: 50,
-                        child: Slider(
-                          value: zoomLevel,
-                          min: minZoomLevel,
-                          max: maxZoomLevel,
-                          onChanged: (newSliderValue) {
-                            setState(() {
-                              zoomLevel = newSliderValue;
-                              _controller!.setZoomLevel(zoomLevel);
-                            });
-                          },
-                          divisions: (maxZoomLevel - 1).toInt() < 1
-                              ? null
-                              : (maxZoomLevel - 1).toInt(),
-                        ),
-                      )
                     ],
                   )
               ),
+              // container which shows the animations of the eyes (Rive animations) with the corresponding width and height
               Container(
-                width: 854,
-                height: 432,
+                width: width,
+                height: height - 100,
                 child: faceFollower(),
               ),
+              // container that prints out the answers and variables of the X value, Y value, Postion and LastPlayedAnimation
               Container(
                 child: Center(
                   child: Row(
@@ -200,7 +136,12 @@ class _CameraViewState extends State<CameraView> {
                         child: Text(lastPlayedAnimation, style: TextStyle(fontSize: 15.0, color: Colors.black)),
                       ),
                       OutlinedButton(
-                        onPressed: () {
+                        onPressed: () async {
+                          //when button is pushed go the ML (pose detection)
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => ML()),
+                          );
                           debugPrint('Received click: Start Event');
                         },
                         child: const Text('Start Event'),
@@ -214,63 +155,7 @@ class _CameraViewState extends State<CameraView> {
         )
     );
   }
-
-  Widget _galleryBody() {
-    return ListView(shrinkWrap: true, children: [
-      _image != null
-          ? Container(
-        height: 400,
-        width: 400,
-        child: Stack(
-          fit: StackFit.expand,
-          children: <Widget>[
-            Image.file(_image!),
-            if (widget.customPaint != null) widget.customPaint!,
-          ],
-        ),
-      )
-          : Icon(
-        Icons.image,
-        size: 200,
-      ),
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: Text('From Gallery'),
-          onPressed: () => _getImage(ImageSource.gallery),
-        ),
-      ),
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: Text('Take a picture'),
-          onPressed: () => _getImage(ImageSource.camera),
-        ),
-      ),
-    ]);
-  }
-
-  Future _getImage(ImageSource source) async {
-    final pickedFile = await _imagePicker?.getImage(source: source);
-    if (pickedFile != null) {
-      _processPickedFile(pickedFile);
-    } else {
-      print('No image selected.');
-    }
-    setState(() {});
-  }
-
-  void _switchScreenMode() async {
-    if (_mode == ScreenMode.liveFeed) {
-      _mode = ScreenMode.gallery;
-      await _stopLiveFeed();
-    } else {
-      _mode = ScreenMode.liveFeed;
-      await _startLiveFeed();
-    }
-    setState(() {});
-  }
-
+  //function to start the camera preview
   Future _startLiveFeed() async {
     final camera = cameras[_cameraIndex];
     _controller = CameraController(
@@ -282,85 +167,83 @@ class _CameraViewState extends State<CameraView> {
       if (!mounted) {
         return;
       }
-      _controller?.getMinZoomLevel().then((value) {
-        zoomLevel = value;
-        minZoomLevel = value;
-      });
-      _controller?.getMaxZoomLevel().then((value) {
-        maxZoomLevel = value;
-      });
       _controller?.startImageStream(_processCameraImage);
       setState(() {});
     });
   }
-
+  //function to stop the camera preview
   Future _stopLiveFeed() async {
     await _controller?.stopImageStream();
     await _controller?.dispose();
     _controller = null;
   }
 
-  Future _switchLiveCamera() async {
-    if (_cameraIndex == 0)
-      _cameraIndex = 1;
-    else
-      _cameraIndex = 0;
-    await _stopLiveFeed();
-    await _startLiveFeed();
-  }
-
-  Future _processPickedFile(PickedFile pickedFile) async {
-    setState(() {
-      _image = File(pickedFile.path);
-    });
-    final inputImage = InputImage.fromFilePath(pickedFile.path);
-    widget.onImage(inputImage);
-  }
-
+  
   Widget faceFollower() {
     if (_riveArtboard != null) {
+      // print face location in the terminal
       print(xWord);
       print(yWord);
-
-      if(xWord == "Links"){
-        if(yWord == "Boven" && lastPlayedAnimation != "Top-left"){
-          _riveArtboard!.artboard..addController(SimpleAnimation('Top-left'));
+      // if functions that plays the animations to the corresponding locations that has been detected with 1 second delay between each
+      if(xWord == "Links") {
+        if (yWord == "Boven" && lastPlayedAnimation != "Top-left") {
+          //calls the animation with one second delay and assign the lastplayed animation
+          Timer(Duration(seconds: 1),(){
+          _riveArtboard!.artboard..addController(SimpleAnimation('Top-left')); 
+          });
           lastPlayedAnimation = "Top-left";
         }
-        if(yWord == "Midden" && lastPlayedAnimation != "Mid-left"){
+        if (yWord == "Midden" && lastPlayedAnimation != "Mid-left") {
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Mid-left'));
+          });
           lastPlayedAnimation = "Mid-left";
         }
-        if(yWord == "Onder" && lastPlayedAnimation != "Bottom-left"){
-          _riveArtboard!.artboard..addController(SimpleAnimation('Bottom-left'));
-          lastPlayedAnimation = "Bottom-left";
+        if (yWord == "Onder" && lastPlayedAnimation != "Bottom-left") {
+          Timer(Duration(seconds: 1),(){//});
+            _riveArtboard!.artboard
+              ..addController(SimpleAnimation('Bottom-left'));
+          });
+            lastPlayedAnimation = "Bottom-left";
         }
       }
-      if(xWord == "Midden" && lastPlayedAnimation != "Top-mid"){
-        if(yWord == "Boven"){
+      if(xWord == "Midden" ){
+        if(yWord == "Boven" && lastPlayedAnimation != "Top-mid"){
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Top-mid'));
+        });
           lastPlayedAnimation = "Top-mid";
         }
         if(yWord == "Midden" && lastPlayedAnimation != "Mid-mid"){
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Mid-mid'));
+          });
           lastPlayedAnimation = "Mid-Mid";
         }
         if(yWord == "Onder" && lastPlayedAnimation != "Bottom-mid"){
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Bottom-mid'));
+        });
           lastPlayedAnimation = "Bottom-mid";
         }
       }
-      if(xWord == "Rechts" && lastPlayedAnimation != "Top-right"){
-        if(yWord == "Boven"){
+      if(xWord == "Rechts"){
+        if(yWord == "Boven" && lastPlayedAnimation != "Top-right"){
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Top-right'));
+          });
           lastPlayedAnimation = "Top-right";
         }
         if(yWord == "Midden" && lastPlayedAnimation != "Mid-right"){
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Mid-right'));
+          });
           lastPlayedAnimation = "Mid-right";
         }
         if(yWord == "Onder" && lastPlayedAnimation != "Bottom-right"){
+          Timer(Duration(seconds: 1),(){
           _riveArtboard!.artboard..addController(SimpleAnimation('Bottom-right'));
+          });
           lastPlayedAnimation = "Bottom-right";
         }
       }
@@ -383,12 +266,6 @@ class _CameraViewState extends State<CameraView> {
     final Size imageSize =
     Size(image.width.toDouble(), image.height.toDouble());
 
-    /*final camera = cameras[_cameraIndex];
-    final imageRotation =
-        InputImageRotationMethods.fromRawValue(camera.sensorOrientation) ??
-            InputImageRotation.Rotation_0deg;*/
-
-    //  quick fix to make it (only) work in landscape mode
     final imageRotation = InputImageRotation.Rotation_0deg;
 
     final inputImageFormat =

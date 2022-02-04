@@ -1,8 +1,6 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
-
 import 'coordinates_translator.dart';
 
 class FaceDetectorPainter extends CustomPainter {
@@ -18,7 +16,6 @@ class FaceDetectorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
       ..color = Colors.red;
-
     for (final Face face in faces) {
       canvas.drawRect(
         Rect.fromLTRB(
